@@ -2,6 +2,7 @@ package com.example.alexanderibsen.spookbusters;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -24,6 +25,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -55,6 +57,11 @@ public class GhostCamActivity extends AppCompatActivity {
 
         mTextureView = (TextureView) findViewById(R.id.textureView);
         mTextureView.setSurfaceTextureListener(mySurfaceTextureListener);
+    }
+
+    public void gotoRenderView(View view){
+        Intent intent = new Intent(this, GhostRenderActivity.class);
+        startActivity(intent);
     }
 
     @Override
