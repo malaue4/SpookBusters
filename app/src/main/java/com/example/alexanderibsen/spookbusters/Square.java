@@ -6,6 +6,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by marti on 29/10/2017.
@@ -17,7 +20,7 @@ public class Square {
     private int mColorHandle;
     private int mMVPMatrixHandle;
 
-    private final int vertexCount = squareCoords.length / COORDS_PER_VERTEX;
+    private final int vertexCount = 32;//squareCoords.length / COORDS_PER_VERTEX;
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
     private FloatBuffer vertexBuffer;
@@ -51,6 +54,15 @@ public class Square {
     float color[] = { 0.63671875f, 0.76953125f, 0.22265625f, 1.0f };
 
     public Square() {
+        float rotationStep = 6.28f/16;
+        VertexList vertexList = new VertexList();
+        for (int i = 0; i < 16; i++) {
+            vertexList.vertices.add(new Vertex((float) (Math.cos(i*rotationStep)*5), 0.5f, (float) (Math.sin(i*rotationStep)*5)));
+            vertexList.vertices.add(new Vertex((float) (Math.cos(i*rotationStep)*5), -0.5f, (float) (Math.sin(i*rotationStep)*5)));
+        }
+        squareCoords = vertexList.toArray();
+        drawOrder = vertexList.getOrder();
+
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
@@ -121,10 +133,48 @@ public class Square {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
         // Draw the triangle
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, vertexCount);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertexCount);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
 
+    }
+
+    class VertexList{
+        List<Vertex> vertices = new ArrayList<>();
+
+        float[] toArray(){
+            float[] verts = new float[vertices.size()*3];
+            int i=0;
+            for (Vertex vertex : vertices) {
+                for (float coord : vertex.toArray()) {
+                    verts[i] = coord;
+                    i++;
+                }
+            }
+            return verts;
+        }
+
+        public short[] getOrder() {
+            short[] shorts = new short[vertices.size()];
+            for (short i = 0; i < vertices.size(); i++) {
+                shorts[i] = i;
+            }
+            return shorts;
+        }
+    }
+
+    class Vertex{
+        float x, y, z;
+
+        public Vertex(float x, float y, float z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        float[] toArray(){
+            return new float[]{x,y,z};
+        }
     }
 }

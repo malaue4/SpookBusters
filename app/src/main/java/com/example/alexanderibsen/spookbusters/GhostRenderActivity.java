@@ -1,12 +1,12 @@
 package com.example.alexanderibsen.spookbusters;
 
+import android.app.Activity;
 import android.opengl.GLSurfaceView;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class GhostRenderActivity extends AppCompatActivity implements Orientation.Listener{
+public class GhostRenderActivity extends Activity implements Orientation.Listener{
 //https://developer.android.com/training/graphics/opengl/environment.html
 
 
@@ -28,6 +28,12 @@ public class GhostRenderActivity extends AppCompatActivity implements Orientatio
         mGLView = new MyGLSurfaceView(this);
         addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        orientation.stopListening();
     }
 
     @Override

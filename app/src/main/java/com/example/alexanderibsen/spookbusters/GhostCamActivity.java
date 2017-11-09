@@ -13,6 +13,7 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,13 +27,15 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
 
-public class GhostCamActivity extends AppCompatActivity {
+public class GhostCamActivity extends AppCompatActivity implements Orientation.Listener {
 
     private final static String TAG = "SimpleCamera";
     private static final int MY_PERMISSIONS_CAMERA = 0;
@@ -46,6 +49,11 @@ public class GhostCamActivity extends AppCompatActivity {
     private CameraDevice.StateCallback mStateCallback = new CameraDeviceCallback();
     private CameraCaptureSession.StateCallback mPreviewStateCallback = new CameraCaptureCallback();
 
+
+    private GLSurfaceView mGLView;
+    private Orientation orientation;
+    private TextView textView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +65,15 @@ public class GhostCamActivity extends AppCompatActivity {
 
         mTextureView = (TextureView) findViewById(R.id.textureView);
         mTextureView.setSurfaceTextureListener(mySurfaceTextureListener);
+
+        orientation = new Orientation(this);
+        orientation.startListening(this);
+        textView = (TextView) findViewById(R.id.textView2);
+        // Create a GLSurfaceView instance and set it
+        // as the ContentView for this Activity.
+
+        mGLView = new MyGLSurfaceView(this);
+        addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     public void gotoRenderView(View view){
@@ -73,6 +90,7 @@ public class GhostCamActivity extends AppCompatActivity {
         {
             mCameraDevice.close();
             mCameraDevice = null;
+            orientation.stopListening();
         }
     }
 
@@ -82,7 +100,20 @@ public class GhostCamActivity extends AppCompatActivity {
         if (mCameraDevice == null)
         {
             openCamera();
+            orientation.startListening(this);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        orientation.stopListening();
+    }
+
+    @Override
+    public void onOrientationChanged(float yaw, float pitch, float roll) {
+        textView.setText(String.format("%s, %s, %s", yaw, pitch, roll));
+        ((MyGLSurfaceView)mGLView).setRotation(yaw, pitch, roll);
     }
 
     @RequiresApi(23)
@@ -99,6 +130,7 @@ public class GhostCamActivity extends AppCompatActivity {
 
         }
     }
+
     private boolean hasCameraPermission() {
         return ActivityCompat.checkSelfPermission(GhostCamActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }

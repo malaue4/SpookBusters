@@ -5,8 +5,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by marti on 30/10/2017.
@@ -30,7 +31,7 @@ public class Orientation implements SensorEventListener {
     public Orientation(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 
-        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
     }
 
     public void startListening(Listener listener){
@@ -54,8 +55,17 @@ public class Orientation implements SensorEventListener {
         if(sensorEvent.sensor == rotationSensor) updateOrientation(sensorEvent.values);
     }
 
-    private void updateOrientation(float[] rotation) {
-        listener.onOrientationChanged(rotation[0],rotation[1],rotation[2]);
+    private void updateOrientation(float[] rotationVector) {
+        float[] rotationMatrix = new float[9];
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
+
+        float[] adjustedRotationMatrix = new float[9];
+        SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X,
+                SensorManager.AXIS_Z, adjustedRotationMatrix);
+
+        float[] orientation = new float[3];
+        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
+        listener.onOrientationChanged(orientation[0],orientation[1],orientation[2]);
     }
 
     @Override
