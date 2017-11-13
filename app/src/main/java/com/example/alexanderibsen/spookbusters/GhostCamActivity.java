@@ -24,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -35,10 +36,11 @@ import android.widget.Toast;
 
 import com.example.alexanderibsen.spookbusters.GL.MyGLSurfaceView;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import com.threed.jpct.*;
 
 public class GhostCamActivity extends AppCompatActivity implements Orientation.Listener {
-
     private final static String TAG = "SimpleCamera";
     private static final int MY_PERMISSIONS_CAMERA = 0;
     private TextureView mTextureView = null;
@@ -52,9 +54,12 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     private CameraCaptureSession.StateCallback mPreviewStateCallback = new CameraCaptureCallback();
 
 
-    private GLSurfaceView mGLView;
     private Orientation orientation;
     private TextView textView;
+
+
+
+    private GLSurfaceView mGLView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +79,7 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
 
-        mGLView = new MyGLSurfaceView(this);
+        mGLView = new MyGLSurfaceView(this, this);
         addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
@@ -88,6 +93,8 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         // TODO Auto-generated method stub
         super.onPause();
 
+        mGLView.onPause();
+
         if (mCameraDevice != null)
         {
             mCameraDevice.close();
@@ -99,6 +106,7 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     @Override
     protected void onResume() {
         super.onResume();
+        mGLView.onResume();
         if (mCameraDevice == null)
         {
             openCamera();
