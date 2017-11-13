@@ -79,7 +79,7 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
 
-        mGLView = new MyGLSurfaceView(this, this);
+        mGLView = new MyGLSurfaceView(this);
         addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 

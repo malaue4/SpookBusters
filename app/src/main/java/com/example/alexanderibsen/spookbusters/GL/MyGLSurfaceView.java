@@ -26,10 +26,16 @@ import com.threed.jpct.util.MemoryHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 
 /**
  * Created by marti on 29/10/2017.
@@ -37,7 +43,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MyGLSurfaceView extends GLSurfaceView {
 
-    public static Activity master = null;
+    public static MyGLSurfaceView master = null;
 
 
     private final MyRenderer mRenderer;
@@ -54,17 +60,19 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
 
     private Random rand = new Random();
-    public static int countSquares = 0;
-    public Object3D ghost;
-    public Object3D obj2;
+
+    public List<Object3D> ghosts = new ArrayList<>(1);
+
     public Texture texture;
 
     float startX, startY;
     private Object3D android;
 
-    public MyGLSurfaceView(Context context, Activity master) {
+    public MyGLSurfaceView(Context context) {
         super(context);
-
+        if (master != null) {
+            copy(master);
+        }
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
@@ -79,11 +87,23 @@ public class MyGLSurfaceView extends GLSurfaceView {
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
 
-        this.master = master;
-
         // Render the view only when there is a change in the drawing data
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+    }
+
+
+    private void copy(Object src) {
+        try {
+            Logger.log("Copying data from master Activity!");
+            Field[] fs = src.getClass().getDeclaredFields();
+            for (Field f : fs) {
+                f.setAccessible(true);
+                f.set(this, f.get(src));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void setRotation(float yaw, float pitch, float roll){
@@ -108,7 +128,8 @@ public class MyGLSurfaceView extends GLSurfaceView {
             startX = me.getRawX();
             startY = me.getRawY();
             float rotY = relativeX/fb.getWidth();
-            ghost.rotateY(rotY);
+            for(Object3D ghost : ghosts)
+                ghost.rotateZ(rotY);
 
             return true;
         }
@@ -154,15 +175,18 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 sun.setIntensity(250, 250, 250);
 
                 // Create the texture we will use in the blitting
-                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
+                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256));//, true);
                 TextureManager.getInstance().addTexture("texture", texture);
 
                 // Create the object
-                ghost = Primitives.getPlane(1, 4f);
-                world.addObject(ghost);
-                ghost.translate(0, 0, 10);
-                ghost.setTexture("texture");
-                ghost.build();
+                addGhost(0, 0, 15);
+                addGhost(15, 0, 0);
+                addGhost(-15, 0, 0);
+                addGhost(0, 0, -12);
+                addAndroid(0, 0, 15);
+                addAndroid(15, 0, 0);
+                addAndroid(-15, 0, 0);
+                addAndroid(0, 0, -12);
 
                 Camera cam = world.getCamera();
                 //cam.moveCamera(Camera.CAMERA_MOVEOUT, 15);
@@ -170,16 +194,28 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
                 SimpleVector sv = new SimpleVector();
                 sv.set(SimpleVector.ORIGIN);
-                sv.y -= 100;
-                sv.z -= 100;
                 sun.setPosition(sv);
                 MemoryHelper.compact();
 
                 if (master == null) {
                     Logger.log("Saving master Activity!");
-                    //master = .this;
+                    master = MyGLSurfaceView.this;
                 }
             }
+        }
+
+        private void addGhost(float x, float y, float z) {
+            Object3D ghost = Primitives.getBox(1, 4f);
+            world.addObject(ghost);
+            SimpleVector simpleVector = new SimpleVector(x,y,z);
+            float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, y, 0)));
+            //ghost.rotateY(angle);
+            ghost.translate(x, y, z);
+            ghost.setTexture("texture");
+            ghost.calcTextureWrap();
+            //ghost.setBillboarding(true);
+            ghost.build();
+            ghosts.add(ghost);
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -193,8 +229,6 @@ public class MyGLSurfaceView extends GLSurfaceView {
             world.draw(fb);
             fb.display();
 
-            //ghost.rotateZ(0.01f);
-
             if (System.currentTimeMillis() - time >= 1000) {
                 Logger.log(fps + "fps");
                 fps = 0;
@@ -203,17 +237,23 @@ public class MyGLSurfaceView extends GLSurfaceView {
             fps++;
         }
 
-        public void addAndroid() {
+        public void addAndroid(int x, int y, int z) {
             try {
                 InputStream is = getResources().getAssets().open("android.3ds");
                 Object3D[] model = Loader.load3DS(is, 3);
-                android = Object3D.mergeAll(model);
+                Object3D android = Object3D.mergeAll(model);
+                SimpleVector simpleVector = new SimpleVector(x,0,z);
+
+                //todo fix not turning good
+                float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, 0, 1)))*signum(x);
+                android.rotateX((float) (-Math.PI / 2));
+                if(abs(angle)>0.01) android.rotateY(angle);
+                android.translate(x,y,z);
                 android.build();
+                world.addObject(android);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            android.rotateX((float) (-Math.PI / 2));
-            world.addObject(android);
         }
 
 
@@ -227,9 +267,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 );
 
                 Camera cam = world.getCamera();
-                cam.lookAt(cam.getPosition().calcAdd(lookTarget));
+                cam.lookAt(lookTarget);
+                cam.rotateCameraZ(-roll);
 
-                cam.rotateAxis(lookTarget, roll);
             }
         }
     }
