@@ -1,4 +1,4 @@
-package com.example.alexanderibsen.spookbusters;
+package com.example.alexanderibsen.spookbusters.GL;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
@@ -7,8 +7,8 @@ import android.opengl.GLSurfaceView;
 /**
  * Created by marti on 29/10/2017.
  */
-
-class MyGLSurfaceView extends GLSurfaceView {
+/*
+public class MyGLSurfaceView extends GLSurfaceView {
 
     private final MyGLRenderer mRenderer;
 
@@ -34,5 +34,32 @@ class MyGLSurfaceView extends GLSurfaceView {
 
     public void setRotation(float yaw, float pitch, float roll){
         mRenderer.setRotation(yaw, pitch, roll);
+    }
+}
+
+
+
+*/
+
+
+
+public class MyGLSurfaceView extends GLSurfaceView {
+
+    private final MyGLRenderer mRenderer;
+
+    public MyGLSurfaceView(Context context) {
+        super(context);
+
+        // Create an OpenGL ES 2.0 context
+        setEGLContextClientVersion(2);
+
+        mRenderer = new MyGLRenderer();
+
+        // Set the Renderer for drawing on the GLSurfaceView
+        setRenderer(mRenderer);
+
+        // Render the view only when there is a change in the drawing data
+        //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
     }
 }

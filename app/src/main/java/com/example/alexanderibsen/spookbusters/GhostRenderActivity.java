@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.alexanderibsen.spookbusters.GL.MyGLSurfaceView;
+
 public class GhostRenderActivity extends Activity implements Orientation.Listener{
 //https://developer.android.com/training/graphics/opengl/environment.html
 

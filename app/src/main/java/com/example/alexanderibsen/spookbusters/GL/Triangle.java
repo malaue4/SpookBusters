@@ -1,4 +1,4 @@
-package com.example.alexanderibsen.spookbusters;
+package com.example.alexanderibsen.spookbusters.GL;
 
 import android.opengl.GLES20;
 

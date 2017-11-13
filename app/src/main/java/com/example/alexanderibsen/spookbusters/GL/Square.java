@@ -1,4 +1,4 @@
-package com.example.alexanderibsen.spookbusters;
+package com.example.alexanderibsen.spookbusters.GL;
 
 import android.opengl.GLES20;
 
@@ -7,7 +7,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**

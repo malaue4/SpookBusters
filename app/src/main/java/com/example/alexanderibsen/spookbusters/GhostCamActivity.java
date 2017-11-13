@@ -33,6 +33,8 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.alexanderibsen.spookbusters.GL.MyGLSurfaceView;
+
 import java.util.Arrays;
 
 public class GhostCamActivity extends AppCompatActivity implements Orientation.Listener {
