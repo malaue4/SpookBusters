@@ -41,7 +41,9 @@ class MyGLRenderer implements GLSurfaceView.Renderer {
                 -(float) Math.sin(pitch),
                 (float) (Math.sin(yaw)*Math.cos(pitch))
         };
-        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, 0, look[0], look[1], look[2], 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -4, look[0], look[1], look[2], 0f, 1.0f, 0.0f);
+
+        //Matrix.setRotateM(mRotationMatrix, 0, 0, look[0], look[1], look[2]);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
@@ -60,8 +62,8 @@ class MyGLRenderer implements GLSurfaceView.Renderer {
 
 
         // Draw shape
-        //triangle.draw(mMVPMatrix);
         square.draw(scratch);
+        triangle.draw(scratch);
     }
 
     private final float[] mMVPMatrix = new float[16];
