@@ -1,13 +1,13 @@
 package com.example.alexanderibsen.spookbusters.GL;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import com.example.alexanderibsen.spookbusters.GhostCamActivity;
+import com.example.alexanderibsen.spookbusters.Objects.Ghost3D;
 import com.example.alexanderibsen.spookbusters.R;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
@@ -35,7 +35,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.cos;
 import static java.lang.Math.signum;
+import static java.lang.Math.sin;
 
 /**
  * Created by marti on 29/10/2017.
@@ -61,15 +63,15 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
     private Random rand = new Random();
 
-    public List<Object3D> ghosts = new ArrayList<>(1);
+    public List<Ghost3D> ghosts = new ArrayList<>(1);
 
     public Texture texture;
 
     float startX, startY;
     private Object3D android;
 
-    public MyGLSurfaceView(Context context) {
-        super(context);
+    public MyGLSurfaceView(Context context, AttributeSet attributeSet){
+        super(context, attributeSet);
         if (master != null) {
             copy(master);
         }
@@ -90,6 +92,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
         // Render the view only when there is a change in the drawing data
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+    }
+    public MyGLSurfaceView(Context context) {
+        this(context, null);
     }
 
 
@@ -175,7 +180,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 sun.setIntensity(250, 250, 250);
 
                 // Create the texture we will use in the blitting
-                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256));//, true);
+                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
                 TextureManager.getInstance().addTexture("texture", texture);
 
                 // Create the object
@@ -183,14 +188,14 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 addGhost(15, 0, 0);
                 addGhost(-15, 0, 0);
                 addGhost(0, 0, -12);
-                addAndroid(0, 0, 15);
-                addAndroid(15, 0, 0);
-                addAndroid(-15, 0, 0);
-                addAndroid(0, 0, -12);
+                //addAndroid(0, 0, 15);
+                //addAndroid(15, 0, 0);
+                //addAndroid(-15, 0, 0);
+                //addAndroid(0, 0, -12);
 
                 Camera cam = world.getCamera();
-                //cam.moveCamera(Camera.CAMERA_MOVEOUT, 15);
-                cam.lookAt(SimpleVector.ORIGIN);
+                //cam.moveCamera(Camera.CAMERA_MOVEOUT, 30);
+                //cam.lookAt(SimpleVector.ORIGIN);
 
                 SimpleVector sv = new SimpleVector();
                 sv.set(SimpleVector.ORIGIN);
@@ -204,16 +209,36 @@ public class MyGLSurfaceView extends GLSurfaceView {
             }
         }
 
+        public void addAndroid(int x, int y, int z) {
+            try {
+                if(android == null) {
+                    InputStream is = getResources().getAssets().open("android.3ds");
+                    Object3D[] model = Loader.load3DS(is, 3);
+                    android = Object3D.mergeAll(model);
+                    //android.rotateX((float) (-Math.PI / 2));
+                    //android.rotateMesh();
+                    android.build();
+                }
+                Ghost3D androidGhost = new Ghost3D(android);
+                //todo fix not turning good
+                //float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, 0, 1)))*signum(x);
+                //float angle = simpleVector.calcAngle(new SimpleVector(-x, 0, -z)) *signum(x);
+                //if(abs(angle)>0.01) androidGhost.rotateY(-angle);
+                androidGhost.moveTo(x,y,z);
+                androidGhost.lookAt(SimpleVector.ORIGIN);
+                androidGhost.build();
+                ghosts.add(androidGhost);
+                world.addObject(androidGhost);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         private void addGhost(float x, float y, float z) {
-            Object3D ghost = Primitives.getBox(1, 4f);
+            Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f));
+
             world.addObject(ghost);
-            SimpleVector simpleVector = new SimpleVector(x,y,z);
-            float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, y, 0)));
-            //ghost.rotateY(angle);
-            ghost.translate(x, y, z);
+            ghost.moveTo(x, y, z);
             ghost.setTexture("texture");
-            ghost.calcTextureWrap();
-            //ghost.setBillboarding(true);
             ghost.build();
             ghosts.add(ghost);
         }
@@ -229,41 +254,35 @@ public class MyGLSurfaceView extends GLSurfaceView {
             world.draw(fb);
             fb.display();
 
+            float angDif = (float) Math.PI*2/ ghosts.size();
+            float anger = (System.currentTimeMillis()%100000) / 800f;
+            for (int i = 0; i < ghosts.size(); i++) {
+                Ghost3D ghost3D = ghosts.get(i);
+                float ang = angDif * i + anger;
+                ghost3D.moveTo((float)cos(ang)*10, ghost3D.getPosition().y, (float)sin(ang)*10);
+                ghost3D.lookAt(SimpleVector.ORIGIN);
+            }
+
             if (System.currentTimeMillis() - time >= 1000) {
                 Logger.log(fps + "fps");
+                Log.e("Spookbusters.G", String.valueOf(ghosts.size()));
+                Log.e("Spookbusters.G", "angDif"+String.valueOf(angDif));
+                Log.e("Spookbusters.G", "anger" +String.valueOf(anger));
                 fps = 0;
                 time = System.currentTimeMillis();
             }
             fps++;
         }
 
-        public void addAndroid(int x, int y, int z) {
-            try {
-                InputStream is = getResources().getAssets().open("android.3ds");
-                Object3D[] model = Loader.load3DS(is, 3);
-                Object3D android = Object3D.mergeAll(model);
-                SimpleVector simpleVector = new SimpleVector(x,0,z);
-
-                //todo fix not turning good
-                float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, 0, 1)))*signum(x);
-                android.rotateX((float) (-Math.PI / 2));
-                if(abs(angle)>0.01) android.rotateY(angle);
-                android.translate(x,y,z);
-                android.build();
-                world.addObject(android);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
 
 
         public void setCameraRotation(float yaw, float pitch, float roll) {
 
             if(world != null) {
                 SimpleVector lookTarget = new SimpleVector(
-                        -(float) (Math.cos(yaw) * Math.cos(pitch)),
-                        (float) Math.sin(pitch),
-                        (float) (Math.sin(yaw) * Math.cos(pitch))
+                        -(float) (cos(yaw) * cos(pitch)),
+                        (float) sin(pitch),
+                        (float) (sin(yaw) * cos(pitch))
                 );
 
                 Camera cam = world.getCamera();

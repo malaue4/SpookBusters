@@ -70,17 +70,17 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_ghost_cam);
 
-        mTextureView = (TextureView) findViewById(R.id.textureView);
+        mTextureView = findViewById(R.id.textureView);
         mTextureView.setSurfaceTextureListener(mySurfaceTextureListener);
 
         orientation = new Orientation(this);
         orientation.startListening(this);
-        textView = (TextView) findViewById(R.id.textView2);
+        textView = findViewById(R.id.textView2);
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
 
-        mGLView = new MyGLSurfaceView(this);
-        addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mGLView = findViewById(R.id.mGLView);
+        //addContentView(mGLView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     public void gotoRenderView(View view){
@@ -106,7 +106,8 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     @Override
     protected void onResume() {
         super.onResume();
-        mGLView.onResume();
+        if(mGLView != null)
+            mGLView.onResume();
         if (mCameraDevice == null)
         {
             openCamera();
@@ -123,7 +124,8 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     @Override
     public void onOrientationChanged(float yaw, float pitch, float roll) {
         textView.setText(String.format("%s, %s, %s", yaw, pitch, roll));
-        ((MyGLSurfaceView)mGLView).setRotation(yaw, pitch, roll);
+        if(mGLView != null)
+            ((MyGLSurfaceView)mGLView).setRotation(yaw, pitch, roll);
     }
 
     @RequiresApi(23)
