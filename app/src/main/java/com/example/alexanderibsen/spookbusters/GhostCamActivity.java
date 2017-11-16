@@ -2,6 +2,7 @@ package com.example.alexanderibsen.spookbusters;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
@@ -9,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -20,6 +22,9 @@ import android.widget.TextView;
 
 import com.example.alexanderibsen.spookbusters.GL.MyGLSurfaceView;
 import com.example.alexanderibsen.spookbusters.Objects.Ghost3D;
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
 
 public class GhostCamActivity extends AppCompatActivity implements Orientation.Listener {
     private final static String TAG = "SimpleCamera";
@@ -54,6 +59,19 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         mGLView = findViewById(R.id.mGLView);
 
         mediaPlayer = MediaPlayer.create(this, R.raw.camera_flash_sound);
+
+
+        if(savedInstanceState.containsKey("ghostIds")){
+            ArrayList<Integer> ghostIds = savedInstanceState.getIntegerArrayList("ghostIds");
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            String ghostsData = sharedPreferences.getString("ghostsData", "");
+            ArrayList<SimpleGhost> ghosts = new Gson().fromJson(ghostsData, SimpleGhost.class);
+
+            for (SimpleGhost ghost :
+                    ghosts) {
+                mGLView.addGhost(ghost.x, 0, ghost.y, ghost.id);
+            }
+        }
     }
 
     public void gotoRenderView(View view){

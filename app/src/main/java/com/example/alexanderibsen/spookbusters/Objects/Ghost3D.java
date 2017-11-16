@@ -19,8 +19,10 @@ public class Ghost3D extends Object3D {
     private final int id;
 
     public void spook() {
-        velocity.add(vectorScalarMultiply(position.normalize(), 5));
-        currentBehaviour = GhostBehaviour.RETREAT;
+        if(currentBehaviour != GhostBehaviour.VANISH) {
+            velocity.add(vectorScalarMultiply(position.normalize(), 5));
+            currentBehaviour = GhostBehaviour.RETREAT;
+        }
     }
 
     private SimpleVector vectorScalarMultiply(SimpleVector vector, float scalar) {
@@ -28,7 +30,7 @@ public class Ghost3D extends Object3D {
     }
 
     public void capture() {
-        velocity.set(0,0,0);
+        velocity.add(vectorScalarMultiply(position.normalize(), 5));
         currentBehaviour = GhostBehaviour.VANISH;
     }
 

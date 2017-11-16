@@ -95,6 +95,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
         setRenderer(mRenderer);
 
     }
+
     public MyGLSurfaceView(Context context) {
         this(context, null);
     }
@@ -158,6 +159,19 @@ public class MyGLSurfaceView extends GLSurfaceView {
         return world;
     }
 
+
+
+    private void addGhost(float x, float y, float z, int ghostId) {
+        Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f), ghostId);
+
+        world.addObject(ghost);
+        ghost.moveTo(x, y, z);
+        ghost.setTexture("texture");
+        ghost.build();
+        ghosts.add(ghost);
+        ghost.lookAt(SimpleVector.ORIGIN);
+    }
+
     public class MyRenderer implements GLSurfaceView.Renderer {
 
         private long time = System.currentTimeMillis();
@@ -194,10 +208,12 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 TextureManager.getInstance().addTexture("texture", texture);
 
                 // Create the object
+                /*
                 addGhost(0, 0, 15, ghosts.size());
                 addGhost(15, 0, 0, ghosts.size());
                 addGhost(-15, 0, 0, ghosts.size());
                 addGhost(0, 0, -12, ghosts.size());
+                */
 
                 Camera cam = world.getCamera();
                 //cam.moveCamera(Camera.CAMERA_MOVEOUT, 30);
@@ -230,17 +246,6 @@ public class MyGLSurfaceView extends GLSurfaceView {
             }
         }
 
-        private void addGhost(float x, float y, float z, int ghostId) {
-            Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f), ghostId);
-
-            world.addObject(ghost);
-            ghost.moveTo(x, y, z);
-            ghost.setTexture("texture");
-            ghost.build();
-            ghosts.add(ghost);
-            ghost.lookAt(SimpleVector.ORIGIN);
-        }
-
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         }
 
@@ -270,9 +275,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
                     ghost.setTransparency((int) ((1-ghost.getPosition().length()/16)*20));
                 }
                 if(flashValue > 0.05) {
-                    back.setTo(255, 255, 255, (int) (255*flashValue));
-                    flashValue = flashValue * 0.5f;
                     Logger.log(flashValue + "flashValue");
+                    back.setTo((int) (255*flashValue), (int) (255*flashValue), (int) (255*flashValue), (int) (255*flashValue));
+                    flashValue = flashValue * 0.5f;
                 } else {
                     back.setTo(0,0,0,0);
                 }
