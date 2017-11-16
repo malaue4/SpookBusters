@@ -183,10 +183,10 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 TextureManager.getInstance().addTexture("texture", texture);
 
                 // Create the object
-                addGhost(0, 0, 15);
-                addGhost(15, 0, 0);
-                addGhost(-15, 0, 0);
-                addGhost(0, 0, -12);
+                addGhost(0, 0, 15, ghosts.size());
+                addGhost(15, 0, 0, ghosts.size());
+                addGhost(-15, 0, 0, ghosts.size());
+                addGhost(0, 0, -12, ghosts.size());
 
                 Camera cam = world.getCamera();
                 //cam.moveCamera(Camera.CAMERA_MOVEOUT, 30);
@@ -214,22 +214,13 @@ public class MyGLSurfaceView extends GLSurfaceView {
                     //android.rotateMesh();
                     android.build();
                 }
-                Ghost3D androidGhost = new Ghost3D(android);
-                //todo fix not turning good
-                //float angle = (float) (simpleVector.calcAngle(new SimpleVector(0, 0, 1)))*signum(x);
-                //float angle = simpleVector.calcAngle(new SimpleVector(-x, 0, -z)) *signum(x);
-                //if(abs(angle)>0.01) androidGhost.rotateY(-angle);
-                androidGhost.moveTo(x,y,z);
-                androidGhost.lookAt(SimpleVector.ORIGIN);
-                androidGhost.build();
-                ghosts.add(androidGhost);
-                world.addObject(androidGhost);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        private void addGhost(float x, float y, float z) {
-            Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f));
+
+        private void addGhost(float x, float y, float z, int ghostId) {
+            Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f), ghostId);
 
             world.addObject(ghost);
             ghost.moveTo(x, y, z);

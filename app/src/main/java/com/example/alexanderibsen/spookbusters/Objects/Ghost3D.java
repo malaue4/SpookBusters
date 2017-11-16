@@ -16,6 +16,7 @@ public class Ghost3D extends Object3D {
     private SimpleVector velocity = new SimpleVector();
     private float retreatDistance=15;
     private float timer = (float) (random()*1000);
+    private final int id;
 
     enum GhostBehaviour {
         APPROACH,
@@ -27,8 +28,9 @@ public class Ghost3D extends Object3D {
 
     GhostBehaviour currentBehaviour = GhostBehaviour.APPROACH;
 
-    public Ghost3D(Object3D obj) {
+    public Ghost3D(Object3D obj, int id) {
         super(obj);
+        this.id = id;
     }
 
     public void moveTo(float x, float y, float z){
