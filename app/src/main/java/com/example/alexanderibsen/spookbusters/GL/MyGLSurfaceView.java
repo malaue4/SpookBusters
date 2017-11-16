@@ -77,10 +77,12 @@ public class MyGLSurfaceView extends GLSurfaceView {
         }
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
+        //Configure the EGL to allow a transparent background
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
         setPreserveEGLContextOnPause(true);
+
 
         setZOrderOnTop(true);
 
@@ -88,9 +90,6 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
-
-        // Render the view only when there is a change in the drawing data
-        //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
     }
     public MyGLSurfaceView(Context context) {
@@ -188,10 +187,6 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 addGhost(15, 0, 0);
                 addGhost(-15, 0, 0);
                 addGhost(0, 0, -12);
-                //addAndroid(0, 0, 15);
-                //addAndroid(15, 0, 0);
-                //addAndroid(-15, 0, 0);
-                //addAndroid(0, 0, -12);
 
                 Camera cam = world.getCamera();
                 //cam.moveCamera(Camera.CAMERA_MOVEOUT, 30);
@@ -241,6 +236,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
             ghost.setTexture("texture");
             ghost.build();
             ghosts.add(ghost);
+            ghost.lookAt(SimpleVector.ORIGIN);
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -254,20 +250,25 @@ public class MyGLSurfaceView extends GLSurfaceView {
             world.draw(fb);
             fb.display();
 
+
+
             float angDif = (float) Math.PI*2/ ghosts.size();
-            float anger = (System.currentTimeMillis()%100000) / 800f;
-            for (int i = 0; i < ghosts.size(); i++) {
+            float anger = (System.currentTimeMillis()%100000) / 2600f;
+            /*for (int i = 0; i < ghosts.size(); i++) {
                 Ghost3D ghost3D = ghosts.get(i);
                 float ang = angDif * i + anger;
                 ghost3D.moveTo((float)cos(ang)*10, ghost3D.getPosition().y, (float)sin(ang)*10);
                 ghost3D.lookAt(SimpleVector.ORIGIN);
-            }
+            }*/
 
-            if (System.currentTimeMillis() - time >= 1000) {
+            if (System.currentTimeMillis() - time >= 1000/30) {
+                for (Ghost3D ghost :
+                        ghosts) {
+                    ghost.update(System.currentTimeMillis() - time);
+                    ghost.setTransparency((int) ((1-ghost.getPosition().length()/16)*20));
+                }
                 Logger.log(fps + "fps");
-                Log.e("Spookbusters.G", String.valueOf(ghosts.size()));
-                Log.e("Spookbusters.G", "angDif"+String.valueOf(angDif));
-                Log.e("Spookbusters.G", "anger" +String.valueOf(anger));
+                Log.e("Spookbusters.G", String.valueOf(world.getCamera().getDirection().calcAngleFast(ghosts.get(0).getPosition())));
                 fps = 0;
                 time = System.currentTimeMillis();
             }
