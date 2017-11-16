@@ -18,6 +18,20 @@ public class Ghost3D extends Object3D {
     private float timer = (float) (random()*1000);
     private final int id;
 
+    public void spook() {
+        velocity.add(vectorScalarMultiply(position.normalize(), 5));
+        currentBehaviour = GhostBehaviour.RETREAT;
+    }
+
+    private SimpleVector vectorScalarMultiply(SimpleVector vector, float scalar) {
+        return new SimpleVector(vector.x*scalar,vector.y*scalar,vector.z*scalar);
+    }
+
+    public void capture() {
+        velocity.set(0,0,0);
+        currentBehaviour = GhostBehaviour.VANISH;
+    }
+
     enum GhostBehaviour {
         APPROACH,
         RETREAT,
@@ -26,11 +40,15 @@ public class Ghost3D extends Object3D {
         VANISH
     }
 
-    GhostBehaviour currentBehaviour = GhostBehaviour.APPROACH;
+    GhostBehaviour currentBehaviour = GhostBehaviour.RETREAT;
 
     public Ghost3D(Object3D obj, int id) {
         super(obj);
         this.id = id;
+    }
+
+    private void moveTo(SimpleVector vector) {
+        moveTo(vector.x, vector.y, vector.z);
     }
 
     public void moveTo(float x, float y, float z){
@@ -40,7 +58,7 @@ public class Ghost3D extends Object3D {
         lookAt(SimpleVector.ORIGIN);
     }
 
-    public void setRotateY(float rotY){
+    private void setRotateY(float rotY){
         clearRotation();
         clearTranslation();
         rotateY(rotY);
@@ -104,17 +122,13 @@ public class Ghost3D extends Object3D {
         }
         SimpleVector simpleVector = new SimpleVector(velocity);
         simpleVector.scalarMul(deltaTime/1000f);
-        position.y = (float) (Math.sin(timer/2000*Math.PI));
+        if(currentBehaviour!=GhostBehaviour.VANISH)
+            position.y = (float) (Math.sin(timer/2000*Math.PI));
         moveTo(position.calcAdd(simpleVector));
         velocity.set(lerpVector(velocity, targetVelocity, 0.1f));
     }
 
-    SimpleVector lerpVector(SimpleVector from, SimpleVector to, float t){
-        SimpleVector result = new SimpleVector(from.x*(1-t)+to.x*t, from.y*(1-t)+to.y*t, from.z*(1-t)+to.z*t);
-        return result;
-    }
-
-    private void moveTo(SimpleVector vector) {
-        moveTo(vector.x, vector.y, vector.z);
+    private SimpleVector lerpVector(SimpleVector from, SimpleVector to, float t){
+        return new SimpleVector(from.x*(1-t)+to.x*t, from.y*(1-t)+to.y*t, from.z*(1-t)+to.z*t);
     }
 }

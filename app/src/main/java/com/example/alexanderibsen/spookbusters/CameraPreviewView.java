@@ -89,6 +89,13 @@ public class CameraPreviewView extends TextureView {
             openCamera();
     }
 
+    public void takePicture() {
+        //play shutter sound
+        //show flash
+        //save image
+        //??
+    }
+
     class MySurfaceTextureListener implements TextureView.SurfaceTextureListener {
 
         @Override

@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.example.alexanderibsen.spookbusters.Objects.Ghost3D;
 import com.example.alexanderibsen.spookbusters.R;
@@ -36,6 +37,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
+import static java.lang.Math.min;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
@@ -59,6 +61,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
     private GL10 lastGl = null;
 
     private RGBColor back = new RGBColor(0, 0, 0, 0);
+    public float flashValue = 0;
 
 
     private Random rand = new Random();
@@ -145,6 +148,14 @@ public class MyGLSurfaceView extends GLSurfaceView {
         }
 
         return super.onTouchEvent(me);
+    }
+
+    public List<Ghost3D> getGhosts() {
+        return ghosts;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     public class MyRenderer implements GLSurfaceView.Renderer {
@@ -252,14 +263,20 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 ghost3D.lookAt(SimpleVector.ORIGIN);
             }*/
 
-            if (System.currentTimeMillis() - time >= 1000/30) {
+            if (System.currentTimeMillis() - time >= 1000/60) {
                 for (Ghost3D ghost :
                         ghosts) {
-                    ghost.update(System.currentTimeMillis() - time);
+                    ghost.update(min(System.currentTimeMillis() - time, 100));
                     ghost.setTransparency((int) ((1-ghost.getPosition().length()/16)*20));
                 }
-                Logger.log(fps + "fps");
-                Log.e("Spookbusters.G", String.valueOf(world.getCamera().getDirection().calcAngleFast(ghosts.get(0).getPosition())));
+                if(flashValue > 0.05) {
+                    back.setTo(255, 255, 255, (int) (255*flashValue));
+                    flashValue = flashValue * 0.5f;
+                    Logger.log(flashValue + "flashValue");
+                } else {
+                    back.setTo(0,0,0,0);
+                }
+                //Logger.log(fps + "fps");
                 fps = 0;
                 time = System.currentTimeMillis();
             }
