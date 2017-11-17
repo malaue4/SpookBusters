@@ -72,6 +72,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
     float startX, startY;
     private Object3D android;
+    private ArrayList<Ghost3D> spawnLater = new ArrayList<>();
 
     public MyGLSurfaceView(Context context, AttributeSet attributeSet){
         super(context, attributeSet);
@@ -162,14 +163,18 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
 
     public void addGhost(float x, float y, float z, int ghostId) {
-        Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f), ghostId);
+        Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 8f), ghostId);
 
-        world.addObject(ghost);
         ghost.moveTo(x, y, z);
         ghost.setTexture("texture");
         ghost.build();
-        ghosts.add(ghost);
         ghost.lookAt(SimpleVector.ORIGIN);
+        ghosts.add(ghost);
+        if(world == null) {
+            spawnLater.add(ghost);
+        } else {
+            world.addObject(ghost);
+        }
     }
 
     public class MyRenderer implements GLSurfaceView.Renderer {
@@ -177,6 +182,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
         private long time = System.currentTimeMillis();
 
         public MyRenderer() {
+            // Create the texture we will use in the blitting
+            texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
+            TextureManager.getInstance().addTexture("texture", texture);
         }
 
         public void onSurfaceChanged(GL10 gl, int w, int h) {
@@ -203,17 +211,13 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 sun = new Light(world);
                 sun.setIntensity(250, 250, 250);
 
-                // Create the texture we will use in the blitting
-                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
-                TextureManager.getInstance().addTexture("texture", texture);
+
 
                 // Create the object
-                /*
-                addGhost(0, 0, 15, ghosts.size());
-                addGhost(15, 0, 0, ghosts.size());
-                addGhost(-15, 0, 0, ghosts.size());
-                addGhost(0, 0, -12, ghosts.size());
-                */
+                for (Ghost3D ghost:spawnLater) {
+                    world.addObject(ghost);
+                }
+                spawnLater.clear();
 
                 Camera cam = world.getCamera();
                 //cam.moveCamera(Camera.CAMERA_MOVEOUT, 30);

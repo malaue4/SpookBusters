@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.example.alexanderibsen.spookbusters.GL.MyGLSurfaceView;
 import com.example.alexanderibsen.spookbusters.Objects.Ghost3D;
+import com.example.alexanderibsen.spookbusters.Objects.GhostSimple;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -31,7 +32,6 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     private static final int MY_PERMISSIONS_CAMERA = 0;
     private CameraPreviewView cameraPreviewView = null;
     private Orientation orientation;
-    private TextView textView;
     private MediaPlayer mediaPlayer;
 
     private MyGLSurfaceView mGLView;
@@ -52,7 +52,6 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
 
         orientation = new Orientation(this);
         orientation.startListening(this);
-        textView = findViewById(R.id.textView2);
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
 
@@ -65,22 +64,17 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         if(getIntent().hasExtra("ghostData")){
             String ghostJson = getIntent().getStringExtra("ghostData");
             ghostData = new Gson().fromJson(ghostJson, GhostSimple[].class);
+            for (GhostSimple ghost : ghostData) {
+                mGLView.addGhost((float)ghost.lat*3, 0, (float)ghost.lng*3, ghost.id);
+            }
         }
+/*
         //using intent as indicator(possibly not needed) and shared preferences as data transfer means
         if(getIntent().hasExtra("ghostData")){
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             String ghostJson = sharedPreferences.getString("ghostsJson", "");
             ghostData = new Gson().fromJson(ghostJson, GhostSimple[].class);
-        }
-
-        for (GhostSimple ghost : ghostData) {
-            mGLView.addGhost(ghost.x, 0, ghost.y, ghost.id);
-        }
-    }
-
-    public void gotoRenderView(View view){
-        Intent intent = new Intent(this, GhostRenderActivity.class);
-        startActivity(intent);
+        }*/
     }
 
 
@@ -88,8 +82,8 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         for(Ghost3D ghost : mGLView.getGhosts()){
             float angleFast = mGLView.getWorld().getCamera().getDirection().calcAngleFast(ghost.getPosition());
             float distance = ghost.getPosition().length();
-            if (angleFast <= 2 && distance < 5) {
-                if(angleFast < 1 && distance < 3) {
+            if (angleFast <= 2 && distance < 8) {
+                if(angleFast < 1 && distance < 6) {
                     ghost.capture();
                 } else {
                     ghost.spook();
@@ -128,9 +122,8 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
 
     @Override
     public void onOrientationChanged(float yaw, float pitch, float roll) {
-        textView.setText(String.format("%s, %s, %s", yaw, pitch, roll));
         if(mGLView != null)
-            ((MyGLSurfaceView)mGLView).setRotation(yaw, pitch, roll);
+            mGLView.setRotation(yaw, pitch, roll);
     }
 
     @Override
@@ -142,5 +135,23 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
         if (permissions[0].equals(Manifest.permission.CAMERA) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             recreate();
         }
+    }
+
+    public void switchGhostTracker(View view){
+        ArrayList<Integer> spookBoost = new ArrayList<>(0);
+        for (Ghost3D ghost:mGLView.getGhosts()) {
+            if(ghost.currentBehaviour == Ghost3D.GhostBehaviour.VANISH){
+                spookBoost.add(ghost.id);
+            }
+        }
+        int[] bustedSpooks = new int[spookBoost.size()];
+        int i=0;
+        for (Integer id: spookBoost) {
+            bustedSpooks[i] = id;
+            i++;
+        }
+
+        Intent intent = new Intent(this, MapsActivity.class).putExtra("bustedSpooks", bustedSpooks);
+        startActivity(intent);
     }
 }

@@ -16,7 +16,7 @@ public class Ghost3D extends Object3D {
     private SimpleVector velocity = new SimpleVector();
     private float retreatDistance=15;
     private float timer = (float) (random()*1000);
-    private final int id;
+    public final int id;
 
     public void spook() {
         if(currentBehaviour != GhostBehaviour.VANISH) {
@@ -34,7 +34,7 @@ public class Ghost3D extends Object3D {
         currentBehaviour = GhostBehaviour.VANISH;
     }
 
-    enum GhostBehaviour {
+    public enum GhostBehaviour {
         APPROACH,
         RETREAT,
         CIRCLE_LEFT,
@@ -42,7 +42,7 @@ public class Ghost3D extends Object3D {
         VANISH
     }
 
-    GhostBehaviour currentBehaviour = GhostBehaviour.RETREAT;
+    public GhostBehaviour currentBehaviour = GhostBehaviour.RETREAT;
 
     public Ghost3D(Object3D obj, int id) {
         super(obj);
@@ -88,7 +88,7 @@ public class Ghost3D extends Object3D {
             case APPROACH:
                 targetVelocity.sub(normalize);
 
-                if(position.length() < 1) currentBehaviour = GhostBehaviour.RETREAT;
+                if(position.length() < 3) currentBehaviour = GhostBehaviour.RETREAT;
                 break;
             case RETREAT:
                 if(position.length() > retreatDistance){
