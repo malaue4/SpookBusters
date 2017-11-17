@@ -60,17 +60,21 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
 
         mediaPlayer = MediaPlayer.create(this, R.raw.camera_flash_sound);
 
-
-        if(savedInstanceState.containsKey("ghostIds")){
-            ArrayList<Integer> ghostIds = savedInstanceState.getIntegerArrayList("ghostIds");
+        GhostSimple[] ghostData;
+        // using intent extra, as indicator and data transfer means
+        if(getIntent().hasExtra("ghostData")){
+            String ghostJson = getIntent().getStringExtra("ghostData");
+            ghostData = new Gson().fromJson(ghostJson, GhostSimple[].class);
+        }
+        //using intent as indicator(possibly not needed) and shared preferences as data transfer means
+        if(getIntent().hasExtra("ghostData")){
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            String ghostsData = sharedPreferences.getString("ghostsData", "");
-            ArrayList<SimpleGhost> ghosts = new Gson().fromJson(ghostsData, SimpleGhost.class);
+            String ghostJson = sharedPreferences.getString("ghostsJson", "");
+            ghostData = new Gson().fromJson(ghostJson, GhostSimple[].class);
+        }
 
-            for (SimpleGhost ghost :
-                    ghosts) {
-                mGLView.addGhost(ghost.x, 0, ghost.y, ghost.id);
-            }
+        for (GhostSimple ghost : ghostData) {
+            mGLView.addGhost(ghost.x, 0, ghost.y, ghost.id);
         }
     }
 

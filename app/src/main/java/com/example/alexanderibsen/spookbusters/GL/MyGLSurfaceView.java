@@ -161,7 +161,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
 
 
-    private void addGhost(float x, float y, float z, int ghostId) {
+    public void addGhost(float x, float y, float z, int ghostId) {
         Ghost3D ghost = new Ghost3D(Primitives.getPlane(1, 4f), ghostId);
 
         world.addObject(ghost);
