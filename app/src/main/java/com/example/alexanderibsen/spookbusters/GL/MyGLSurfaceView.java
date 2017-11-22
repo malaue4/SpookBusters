@@ -183,8 +183,10 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
         public MyRenderer() {
             // Create the texture we will use in the blitting
-            texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
-            TextureManager.getInstance().addTexture("texture", texture);
+            if(!TextureManager.getInstance().containsTexture("texture")) {
+                texture = new Texture(BitmapHelper.rescale(BitmapHelper.convert(getResources().getDrawable(R.drawable.ghost)), 256, 256), true);
+                TextureManager.getInstance().addTexture("texture", texture);
+            }
         }
 
         public void onSurfaceChanged(GL10 gl, int w, int h) {
