@@ -43,6 +43,8 @@ import java.util.Random;
 import static android.location.LocationManager.NETWORK_PROVIDER;
 import static android.support.v4.app.ActivityCompat.requestPermissions;
 import static android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
     SharedPreferences preferences;
@@ -109,6 +111,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
         }
+
+        if(getIntent().hasExtra("FromGhostCam")){
+
+            updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
+        }
         final Handler handler = new Handler();
         class MyRunnable implements Runnable {
             private Handler handler;
@@ -121,6 +128,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 this.handler.postDelayed(this, 50);
                 moveGhosts();
+                if(ghosts.size() > 3){
+                    generateGhost(playerLoc, ghostSpawnDiameter);
+                }
+                for (Ghost g: ghosts) {
+                    if(g.location.distanceTo(playerLoc) > 30){
+
+                    }
+                }
             }
         }
         handler.post(new MyRunnable(handler));
@@ -140,14 +155,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Define a listener that responds to location updates
     LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            playerLocMaps = new LatLng(location.getLatitude(), location.getLongitude());
             playerLoc = location;
             if (!ghostSpawned){
-                if (playerLocMaps != null) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
-                    MarkerOptions markPlayer = new MarkerOptions().position(playerLocMaps).title("Spookbuster").icon(iconPlayer);
-                    playerMarker = mMap.addMarker(markPlayer);
-                }
                 if(ghostsJson.length() > 4) {
                     GhostSimple[] transferedGhosts = gson.fromJson(ghostsJson, GhostSimple[].class);
                     for (GhostSimple g : transferedGhosts) {
@@ -168,7 +177,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 txtSeek.setText("SEEK OUT GHOSTS!");
 
             }
-            playerMarker.setPosition(playerLocMaps);
+            updatePlayerLoc(location);
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -197,25 +206,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    private void updatePlayerLoc(Location location){
+        playerLocMaps = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        if(playerMarker == null) {
+            MarkerOptions markPlayer = new MarkerOptions().position(playerLocMaps).title("Spookbuster").icon(iconPlayer);
+            playerMarker = mMap.addMarker(markPlayer);
+        }
+        playerMarker.setPosition(playerLocMaps);
+
+    }
+
     private void generateGhost(Location location, int spawnRange) {
 
         double lat = location.getLatitude();
         double lon = location.getLongitude();
 
         if(spawnRange >0) {
+            double direction = r.nextDouble()*Math.PI*2;
+            double distance = 5 + r.nextDouble()*(spawnRange-5);
+
+            double metersLat = cos(direction)*distance;
+            double metersLong = sin(direction)*distance;
+            /*
             double metersLat = r.nextInt(spawnRange) - spawnRange / 2;
             double metersLong = r.nextInt(spawnRange) - spawnRange / 2;
-            //Anden måde at udregne det på.. Virker ligeså godt (måske en lille tand bedre)
-            // double new_latitude  = lat  + (0.01 / radiusEarth) * (180 / Math.PI);
-            // double new_longitude = lon + (0.01 / radiusEarth) * (180 / Math.PI) / Math.cos(lat * Math.PI/180);
             while (Math.abs(metersLat) < 5 || Math.abs(metersLong) < 5) {
                 metersLat = r.nextInt(spawnRange) - spawnRange / 2;
                 metersLong = r.nextInt(spawnRange) - spawnRange / 2;
-            }
+            }*/
             double coefLat = metersLat * meterDegree;  //1 meter i grader rundt om jorden = 0,000008983
             double coefLong = metersLong * meterDegree;
             lat = lat + coefLat;
-            lon = lon + coefLong / Math.cos(lat * 0.018);
+            lon = lon + coefLong / cos(lat * 0.018);
         }
 
         Location loc = new Location(NETWORK_PROVIDER);
@@ -256,7 +279,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void centerCamera(View view){
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        if(playerLocMaps != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        }
     }
 
     @Override
