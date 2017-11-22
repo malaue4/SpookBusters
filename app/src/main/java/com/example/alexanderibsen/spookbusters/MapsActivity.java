@@ -1,6 +1,8 @@
 package com.example.alexanderibsen.spookbusters;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,8 +10,10 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -17,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.alexanderibsen.spookbusters.Objects.Ghost;
 import com.example.alexanderibsen.spookbusters.Objects.GhostSimple;
@@ -36,12 +41,17 @@ import java.util.List;
 import java.util.Random;
 
 import static android.location.LocationManager.NETWORK_PROVIDER;
+import static android.support.v4.app.ActivityCompat.requestPermissions;
+import static android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     Gson gson = new Gson();
     LocationManager locationManager;
+    private static final int MY_PERMISSIONS_FINE_LOC = 1;
     Button btnGhostCam;
     TextView txtSeek;
     TextView textView;
@@ -66,6 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     BitmapDescriptor iconPlayer;
 
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,11 +102,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Location Service
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if (!hasFineLocPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestFineLocPermission();
+            } else {
+                Toast.makeText(this, "This app needs camera permission", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
         }
 
-        locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
+        if(getIntent().hasExtra("FromGhostCam")){
+
+            updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
+        }
         final Handler handler = new Handler();
         class MyRunnable implements Runnable {
             private Handler handler;
@@ -108,9 +128,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 this.handler.postDelayed(this, 50);
                 moveGhosts();
+                if(ghosts.size() > 3){
+                    generateGhost(playerLoc, ghostSpawnDiameter);
+                }
+                for (Ghost g: ghosts) {
+                    if(g.location.distanceTo(playerLoc) > 30){
+
+                    }
+                }
             }
         }
         handler.post(new MyRunnable(handler));
+    }
+
+    private boolean hasFineLocPermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -123,14 +155,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Define a listener that responds to location updates
     LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            playerLocMaps = new LatLng(location.getLatitude(), location.getLongitude());
             playerLoc = location;
             if (!ghostSpawned){
-                if (playerLocMaps != null) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
-                    MarkerOptions markPlayer = new MarkerOptions().position(playerLocMaps).title("Spookbuster").icon(iconPlayer);
-                    playerMarker = mMap.addMarker(markPlayer);
-                }
                 if(ghostsJson.length() > 4) {
                     GhostSimple[] transferedGhosts = gson.fromJson(ghostsJson, GhostSimple[].class);
                     for (GhostSimple g : transferedGhosts) {
@@ -151,7 +177,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 txtSeek.setText("SEEK OUT GHOSTS!");
 
             }
-            playerMarker.setPosition(playerLocMaps);
+            updatePlayerLoc(location);
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -164,25 +190,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
+    @RequiresApi(23)
+    private void requestFineLocPermission(){
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                Toast.makeText(this, "Need GPS to show ghosts", Toast.LENGTH_LONG).show();
+            } else { // No explanation needed, we can request the permission.
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_FINE_LOC);
+            }
+        }
+
+    }
+
+    private void updatePlayerLoc(Location location){
+        playerLocMaps = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        if(playerMarker == null) {
+            MarkerOptions markPlayer = new MarkerOptions().position(playerLocMaps).title("Spookbuster").icon(iconPlayer);
+            playerMarker = mMap.addMarker(markPlayer);
+        }
+        playerMarker.setPosition(playerLocMaps);
+
+    }
+
     private void generateGhost(Location location, int spawnRange) {
 
         double lat = location.getLatitude();
         double lon = location.getLongitude();
 
         if(spawnRange >0) {
+            double direction = r.nextDouble()*Math.PI*2;
+            double distance = 5 + r.nextDouble()*(spawnRange-5);
+
+            double metersLat = cos(direction)*distance;
+            double metersLong = sin(direction)*distance;
+            /*
             double metersLat = r.nextInt(spawnRange) - spawnRange / 2;
             double metersLong = r.nextInt(spawnRange) - spawnRange / 2;
-            //Anden måde at udregne det på.. Virker ligeså godt (måske en lille tand bedre)
-            // double new_latitude  = lat  + (0.01 / radiusEarth) * (180 / Math.PI);
-            // double new_longitude = lon + (0.01 / radiusEarth) * (180 / Math.PI) / Math.cos(lat * Math.PI/180);
             while (Math.abs(metersLat) < 5 || Math.abs(metersLong) < 5) {
                 metersLat = r.nextInt(spawnRange) - spawnRange / 2;
                 metersLong = r.nextInt(spawnRange) - spawnRange / 2;
-            }
+            }*/
             double coefLat = metersLat * meterDegree;  //1 meter i grader rundt om jorden = 0,000008983
             double coefLong = metersLong * meterDegree;
             lat = lat + coefLat;
-            lon = lon + coefLong / Math.cos(lat * 0.018);
+            lon = lon + coefLong / cos(lat * 0.018);
         }
 
         Location loc = new Location(NETWORK_PROVIDER);
@@ -223,7 +279,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void centerCamera(View view){
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        if(playerLocMaps != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(playerLocMaps, 20f));
+        }
     }
 
     @Override

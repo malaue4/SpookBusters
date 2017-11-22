@@ -38,4 +38,8 @@ public class Ghost {
         marker.setPosition(new LatLng(location.getLatitude(),location.getLongitude()));
 
     }
+
+    public void RespawnGhost(Location loc, int spawnRange){
+
+    }
 }
