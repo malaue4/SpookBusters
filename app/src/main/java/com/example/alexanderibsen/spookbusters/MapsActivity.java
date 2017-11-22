@@ -114,6 +114,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if(getIntent().hasExtra("FromGhostCam")){
             updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
+
         }
 
         final Handler handler = new Handler();
@@ -167,6 +168,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     }
                     ghostSpawned = true;
+                    editor.putString("ghostsJson", "");
+                    editor.apply();
                 } else {
                     for (int i = 0; i < 4; i++) {
                         generateGhost(location, ghostSpawnDiameter);
