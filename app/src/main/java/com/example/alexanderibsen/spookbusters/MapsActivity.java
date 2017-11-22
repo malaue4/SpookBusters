@@ -113,9 +113,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         if(getIntent().hasExtra("FromGhostCam")){
-
             updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
         }
+
         final Handler handler = new Handler();
         class MyRunnable implements Runnable {
             private Handler handler;
@@ -128,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 this.handler.postDelayed(this, 50);
                 moveGhosts();
-                if(ghosts.size() > 3){
+                if(ghosts.size() < 3){
                     generateGhost(playerLoc, ghostSpawnDiameter);
                 }
                 for (Ghost g: ghosts) {
@@ -157,7 +157,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onLocationChanged(Location location) {
             playerLoc = location;
             if (!ghostSpawned){
-                if(ghostsJson.length() > 4) {
+                if(getIntent().hasExtra("FromGhostCam")) {
                     GhostSimple[] transferedGhosts = gson.fromJson(ghostsJson, GhostSimple[].class);
                     for (GhostSimple g : transferedGhosts) {
                         Location mLoc = new Location(NETWORK_PROVIDER);
@@ -300,14 +300,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             editor.putString("ghostsJson", "");
             editor.apply();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        editor.putString("ghostJson", "");
-        editor.apply();
-        finish();
     }
 }
 

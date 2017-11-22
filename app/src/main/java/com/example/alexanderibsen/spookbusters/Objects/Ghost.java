@@ -39,7 +39,4 @@ public class Ghost {
 
     }
 
-    public void RespawnGhost(Location loc, int spawnRange){
-
-    }
 }
