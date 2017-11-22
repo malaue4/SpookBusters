@@ -170,8 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     }
                     ghostSpawned = true;
-                    editor.putString("ghostsJson", "");
-                    editor.apply();
+
                 } else {
                     for (int i = 0; i < 4; i++) {
                         generateGhost(location, ghostSpawnDiameter);
@@ -266,7 +265,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ghostInRange.clear();
         for (Ghost g : ghosts) {
             if (playerLoc.distanceTo(g.location) < 10) {
-                ghostInRange.add(new GhostSimple(g.ID,g.location.getLatitude()-playerLoc.getLatitude(),g.location.getLongitude()-playerLoc.getLongitude()));
+                ghostInRange.add(new GhostSimple(g.ID,(g.location.getLatitude()-playerLoc.getLatitude())/meterDegree,(g.location.getLongitude()-playerLoc.getLongitude())/meterDegree));
             }
         }
         if(ghostInRange.isEmpty()){
@@ -298,13 +297,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         ghostsJson = gson.toJson(transferGhosts);
         Log.d("GHOST", ghostsJson);
-        if(ghostsJson.length() > 4) {
-            editor.putString("ghostsJson", ghostsJson);
-            editor.apply();
-        } else {
-            editor.putString("ghostsJson", "");
-            editor.apply();
-        }
+        editor.putString("ghostsJson", ghostsJson);
+        editor.apply();
+
     }
 }
 
