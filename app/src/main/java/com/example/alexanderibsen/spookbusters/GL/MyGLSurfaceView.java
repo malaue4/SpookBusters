@@ -47,7 +47,7 @@ import static java.lang.Math.sin;
 
 public class MyGLSurfaceView extends GLSurfaceView {
 
-    public static MyGLSurfaceView master = null;
+    //public static MyGLSurfaceView master = null;
 
 
     private final MyRenderer mRenderer;
@@ -76,18 +76,18 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
     public MyGLSurfaceView(Context context, AttributeSet attributeSet){
         super(context, attributeSet);
-        if (master != null) {
-            copy(master);
-        }
+        //if (master != null) {
+        //    copy(master);
+        //}
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
         //Configure the EGL to allow a transparent background
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
-        setPreserveEGLContextOnPause(true);
+        //setPreserveEGLContextOnPause(true);
 
-
+        // makes the ghosts appear on top
         setZOrderOnTop(true);
 
         mRenderer = new MyRenderer();
@@ -204,7 +204,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
             }
 
             // Create the world if not yet created
-            if (master == null) {
+            if (true){//master == null) {
                 world = new World();
                 world.setAmbientLight(20, 20, 20);
 
@@ -227,11 +227,11 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 sv.set(SimpleVector.ORIGIN);
                 sun.setPosition(sv);
                 MemoryHelper.compact();
-
+/*
                 if (master == null) {
                     Logger.log("Saving master Activity!");
                     master = MyGLSurfaceView.this;
-                }
+                }*/
             }
         }
 
