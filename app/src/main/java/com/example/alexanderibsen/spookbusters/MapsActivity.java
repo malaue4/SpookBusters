@@ -112,10 +112,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
         }
 
-        if(getIntent().hasExtra("FromGhostCam")){
-            updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
 
-        }
 
         final Handler handler = new Handler();
         class MyRunnable implements Runnable {
@@ -146,10 +143,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        if(getIntent().hasExtra("FromGhostCam")){
+            updatePlayerLoc(locationManager.getLastKnownLocation(NETWORK_PROVIDER));
+
+        }
 
     }
 
