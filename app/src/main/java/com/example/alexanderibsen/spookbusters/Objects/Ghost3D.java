@@ -119,7 +119,7 @@ public class Ghost3D extends Object3D {
                 }
                 break;
             case VANISH:
-                targetVelocity.add(new SimpleVector(0,-1,0));
+                targetVelocity.add(new SimpleVector(0,-10,0));
                 break;
         }
         SimpleVector simpleVector = new SimpleVector(velocity);

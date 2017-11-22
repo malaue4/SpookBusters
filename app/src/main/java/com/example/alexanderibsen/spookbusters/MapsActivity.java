@@ -36,7 +36,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
+import java.io.OptionalDataException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -126,12 +129,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 this.handler.postDelayed(this, 50);
                 moveGhosts();
-                if(ghosts.size() < 3){
-                    generateGhost(playerLoc, ghostSpawnDiameter);
-                }
-                for (Ghost g: ghosts) {
-                    if(g.location.distanceTo(playerLoc) > 30){
+                if(playerLoc != null) {
+                    if (ghosts.size() < 3) {
+                        generateGhost(playerLoc, ghostSpawnDiameter);
+                    }
+                    for (Ghost g : ghosts) {
+                        if (g.location.distanceTo(playerLoc) > 30) {
 
+                        }
                     }
                 }
             }
@@ -162,7 +167,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (!ghostSpawned){
                 if(getIntent().hasExtra("FromGhostCam")) {
                     GhostSimple[] transferedGhosts = gson.fromJson(ghostsJson, GhostSimple[].class);
+                    ArrayList<Integer> bustedSpooks = getIntent().getIntegerArrayListExtra("bustedSpooks");
+
                     for (GhostSimple g : transferedGhosts) {
+                        if(bustedSpooks.contains(g.id)) continue;
                         Location mLoc = new Location(NETWORK_PROVIDER);
                         mLoc.setLatitude(g.lat);
                         mLoc.setLongitude(g.lng);

@@ -36,10 +36,10 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".MapsActivity">
+        <activity android:name=".GhostCamActivity">
         </activity>
         <activity
-            android:name=".GhostCamActivity"
+            android:name=".MapsActivity"
             android:label="@string/title_activity_maps">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

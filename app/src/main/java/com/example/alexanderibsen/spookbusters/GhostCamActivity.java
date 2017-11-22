@@ -138,20 +138,15 @@ public class GhostCamActivity extends AppCompatActivity implements Orientation.L
     }
 
     public void switchGhostTracker(View view){
-        ArrayList<Integer> spookBoost = new ArrayList<>(0);
+        ArrayList<Integer> bustedSpooks = new ArrayList<>(0);
         for (Ghost3D ghost:mGLView.getGhosts()) {
             if(ghost.currentBehaviour == Ghost3D.GhostBehaviour.VANISH){
-                spookBoost.add(ghost.id);
+                bustedSpooks.add(ghost.id);
             }
-        }
-        int[] bustedSpooks = new int[spookBoost.size()];
-        int i=0;
-        for (Integer id: spookBoost) {
-            bustedSpooks[i] = id;
-            i++;
         }
 
         Intent intent = new Intent(this, MapsActivity.class).putExtra("bustedSpooks", bustedSpooks);
+        intent.putExtra("FromGhostCam", 0);
         startActivity(intent);
     }
 }
