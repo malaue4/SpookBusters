@@ -189,7 +189,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
-                Toast.makeText(this, "Need camera to show ghosts", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Need GPS to show ghosts", Toast.LENGTH_LONG).show();
             } else { // No explanation needed, we can request the permission.
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_FINE_LOC);
             }
