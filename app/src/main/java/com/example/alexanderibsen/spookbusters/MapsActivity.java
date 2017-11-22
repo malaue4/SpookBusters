@@ -272,7 +272,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         ghostInRange.clear();
         for (Ghost g : ghosts) {
-            if (playerLoc.distanceTo(g.location) < 10) {
+            if (playerLoc.distanceTo(g.location) < 5) {
                 ghostInRange.add(new GhostSimple(g.ID,(g.location.getLatitude()-playerLoc.getLatitude())/meterDegree,(g.location.getLongitude()-playerLoc.getLongitude())/meterDegree));
             }
         }
