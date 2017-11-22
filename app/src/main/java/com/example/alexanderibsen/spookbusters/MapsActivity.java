@@ -1,6 +1,8 @@
 package com.example.alexanderibsen.spookbusters;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,8 +10,10 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -17,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.alexanderibsen.spookbusters.Objects.Ghost;
 import com.example.alexanderibsen.spookbusters.Objects.GhostSimple;
@@ -36,12 +41,15 @@ import java.util.List;
 import java.util.Random;
 
 import static android.location.LocationManager.NETWORK_PROVIDER;
+import static android.support.v4.app.ActivityCompat.requestPermissions;
+import static android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     Gson gson = new Gson();
     LocationManager locationManager;
+    private static final int MY_PERMISSIONS_FINE_LOC = 1;
     Button btnGhostCam;
     TextView txtSeek;
     TextView textView;
@@ -66,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     BitmapDescriptor iconPlayer;
 
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,11 +100,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Location Service
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if (!hasFineLocPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestFineLocPermission();
+            } else {
+                Toast.makeText(this, "This app needs camera permission", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
         }
-
-        locationManager.requestLocationUpdates(NETWORK_PROVIDER, 0, 0, locationListener);
         final Handler handler = new Handler();
         class MyRunnable implements Runnable {
             private Handler handler;
@@ -111,6 +124,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
         handler.post(new MyRunnable(handler));
+    }
+
+    private boolean hasFineLocPermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -163,6 +180,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onProviderDisabled(String provider) {
         }
     };
+
+    @RequiresApi(23)
+    private void requestFineLocPermission(){
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                Toast.makeText(this, "Need camera to show ghosts", Toast.LENGTH_LONG).show();
+            } else { // No explanation needed, we can request the permission.
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_FINE_LOC);
+            }
+        }
+
+    }
 
     private void generateGhost(Location location, int spawnRange) {
 
